@@ -85,10 +85,10 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 # Run nginx
-service nginx start
+# service nginx start
 
-if [ $restart_nginx=="true" ]; then
-  echo "restarting nginx per certificate change"
-  service nginx stop
-  service nginx start
-fi
+# if [ $restart_nginx=="true" ]; then
+#   echo "restarting nginx per certificate change"
+#   service nginx stop
+#   service nginx start
+# fi
