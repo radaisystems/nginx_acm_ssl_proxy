@@ -33,7 +33,8 @@ if [[ $(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cer
       echo "Creating key file for certificate key"
     fi
   fi
-  if [[ "$(echo ${BASH_REMATCH[1]})"!="$(cat '/etc/ssl/certs/${FQDN}.crt')" ]]; then
+  if [[ "$(echo ${BASH_REMATCH[1]})"!="$(cat /etc/ssl/certs/${FQDN}.crt)" ]]; then
+    touch "/etc/ssl/certs/${FQDN}.crt"
     echo "${BASH_REMATCH[1]}" > "/etc/ssl/certs/${FQDN}.crt"
     echo "copying to crt file /etc/ssl/certs/${FQDN}.crt"
     restart_nginx="true"
@@ -47,7 +48,8 @@ if [[ $(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cer
       echo "Creating key file for certificate key"
     fi
   fi
-  if [[ "$(echo ${BASH_REMATCH[2]})"!="$(cat '/etc/ssl/private/${FQDN}.key')" ]]; then
+  if [[ "$(echo ${BASH_REMATCH[2]})"!="$(cat /etc/ssl/private/${FQDN}.key)" ]]; then
+    touch "/etc/ssl/private/${FQDN}.key"
     echo "${BASH_REMATCH[2]}" > "/etc/ssl/private/${FQDN}.key"
     echo "Copying SSL key to key file /etc/ssl/private/${FQDN}.key"
     restart_nginx="true"
@@ -83,10 +85,10 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 # Run nginx
-# exec /usr/sbin/nginx start
+service nginx start
 
 if [ $restart_nginx=="true" ]; then
   echo "restarting nginx per certificate change"
-  exec /usr/sbin/nginx stop
-  exec /usr/sbin/nginx start
+  service nginx stop
+  service nginx start
 fi
