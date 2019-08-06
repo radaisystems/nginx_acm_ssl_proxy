@@ -10,6 +10,10 @@ elif [[ -z "$FQDN" ]]; then
     exit 1
 fi
 
+echo $FQDN
+echo $ROOT_URL_PATH
+echo $DOMAIN_NAME
+
 secret_re='.*"SecretString": "(.*)",.*'
 cert_re='.*"CertificateChain": "(.*-----).*"PrivateKey": "(.*-----).*'
 
