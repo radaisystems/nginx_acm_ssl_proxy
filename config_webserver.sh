@@ -10,16 +10,15 @@ elif [[ -z "$FQDN" ]]; then
     exit 1
 fi
 
-arn_re=".*(arn:.*)\".*\"DomainName\": \"${FQDN}\".*"
 secret_re='.*"SecretString": "(.*)",.*'
 cert_re='.*"CertificateChain": "(.*-----).*"PrivateKey": "(.*-----).*'
 
-if [[ $(aws acm list-certificates) =~ $arn_re ]]; then
-  cert_arn=${BASH_REMATCH[1]}
-fi
+
+cert_arn=$(eval "aws acm list-certificates --query 'CertificateSummaryList[?DomainName==\`${FQDN}\`]'.[CertificateArn] --output text")
 
 if [[ $(aws secretsmanager get-secret-value --secret-id ${FQDN}) =~ $secret_re ]]; then
   cert_pass_phrase=${BASH_REMATCH[1]}
+  echo "$secret_re"
   echo $cert_pass_phrase
 else
   echo "No cert pass phrase by the domain ${FQDN}"
@@ -36,7 +35,7 @@ if [[ $(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cer
   fi
   if [[ "$(echo ${BASH_REMATCH[1]})"!="$(cat '/etc/ssl/certs/${FQDN}.crt')" ]]; then
     echo "${BASH_REMATCH[1]}" > "/etc/ssl/certs/${FQDN}.crt"
-    echo "copying to crt file"
+    echo "copying to crt file /etc/ssl/certs/${FQDN}.crt"
     restart_nginx="true"
   else
   	echo "Certificate value has not changed, not updating."
@@ -50,10 +49,10 @@ if [[ $(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cer
   fi
   if [[ "$(echo ${BASH_REMATCH[2]})"!="$(cat '/etc/ssl/private/${FQDN}.key')" ]]; then
     echo "${BASH_REMATCH[2]}" > "/etc/ssl/private/${FQDN}.key"
-    "copying to key file"
+    echo "Copying SSL key to key file /etc/ssl/private/${FQDN}.key"
     restart_nginx="true"
   else
-  	echo "Certificate value has not changed, not updating."
+    echo "Key value has not changed, not updating."
   fi
 
 fi
@@ -84,9 +83,10 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 # Run nginx
-exec /usr/sbin/nginx start
+# exec /usr/sbin/nginx start
 
 if [ $restart_nginx=="true" ]; then
+  echo "restarting nginx per certificate change"
   exec /usr/sbin/nginx stop
   exec /usr/sbin/nginx start
 fi
