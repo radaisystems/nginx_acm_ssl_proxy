@@ -12,11 +12,6 @@ RUN pip3 --no-cache-dir install --upgrade awscli
 
 ENV DATA_DIR /var/www
 
-ENV FQDN api.io-dev.radai
-ENV AWS_DEFAULT_REGION us-west-2
-ENV ENDPOINT_NAME api
-ENV DOMAIN_NAME io-dev
-
 ADD config_webserver.sh /usr/local/bin/
 ADD conf /etc/nginx/conf.d/
 
