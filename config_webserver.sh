@@ -1,4 +1,10 @@
 #!/bin/env bash
+
+####################
+# Trust Private CA #
+####################
+
+
 echo "Pulling certificate for ${FQDN}"
 
 ## SSL CERTIFICATES
@@ -10,13 +16,7 @@ elif [[ -z "$FQDN" ]]; then
     exit 1
 fi
 
-echo $FQDN
-echo $ROOT_URL_PATH
-echo $DOMAIN_NAME
-
 secret_re='.*"SecretString": "(.*)",.*'
-cert_re='.*"CertificateChain": "(.*-----).*"PrivateKey": "(.*-----).*'
-
 cert_arn=$(eval "aws acm list-certificates --query 'CertificateSummaryList[?DomainName==\`${FQDN}\`]'.[CertificateArn] --output text")
 
 if [[ $(aws secretsmanager get-secret-value --secret-id ${FQDN}) =~ $secret_re ]]; then
@@ -26,41 +26,56 @@ else
   exit 1
 fi
 
-if [[ $(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cert_pass_phrase) =~ $cert_re ]]; then
-
-  if [ ! -d "/etc/ssl/certs/" ]; then
-    mkdir "/etc/ssl/certs/"
-    if [ ! -f "/etc/ssl/certs/${FQDN}.crt"]; then
-      echo "Creating key file for certificate key"
-    fi
-  fi
-  if [[ "$(echo ${BASH_REMATCH[1]})"!="$(cat /etc/ssl/certs/${FQDN}.crt)" ]]; then
+# SSL Certificate
+if [ ! -d "/etc/ssl/certs/" ]; then
+  mkdir "/etc/ssl/certs/"
+  if [ ! -f "/etc/ssl/certs/${FQDN}.crt"]; then
+    echo "Creating key file for certificate key"
     touch "/etc/ssl/certs/${FQDN}.crt"
-    echo "${BASH_REMATCH[1]}" > "/etc/ssl/certs/${FQDN}.crt"
-    echo "Copying ACM cert to file /etc/ssl/certs/${FQDN}.crt"
-    restart_nginx="true"
-  else
-  	echo "Certificate value has not changed, not updating."
   fi
-
-  if [ ! -d "/etc/ssl/private/" ]; then
-    mkdir "/etc/ssl/private/"
-    if [ ! -f "/etc/ssl/private/${FQDN}.key"]; then
-      echo "Creating key file for certificate key"
-    fi
-  fi
-  if [[ "$(echo ${BASH_REMATCH[2]})"!="$(cat /etc/ssl/private/${FQDN}.key)" ]]; then
-    touch "/etc/ssl/private/${FQDN}.key"
-    echo "${BASH_REMATCH[2]}" > "/etc/ssl/private/${FQDN}.key"
-    echo "Copying ACM key to file /etc/ssl/private/${FQDN}.key"
-    restart_nginx="true"
-  else
-    echo "Key value has not changed, not updating."
-  fi
-
 fi
 
-### NGINX
+ssl_cert=$(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cert_pass_phrase | jq -r '"\(.Certificate)\(.CertificateChain)"')
+if [[ $ssl_cert!="$(cat /etc/ssl/certs/${FQDN}.crt)" ]]; then
+  echo "Copying ACM cert to file /etc/ssl/certs/${FQDN}.crt"
+  echo "$ssl_cert" > "/etc/ssl/certs/${FQDN}.crt"
+  restart_nginx="true"
+else
+	echo "Certificate value has not changed, not updating."
+fi
+
+# SSL Key
+if [ ! -d "/etc/ssl/private/" ]; then
+  mkdir "/etc/ssl/private/"
+  if [ ! -f "/etc/ssl/private/${FQDN}.key"]; then
+    echo "Creating key file for certificate key"
+    touch "/etc/ssl/private/${FQDN}.key"
+  fi
+fi
+ssl_key=$(aws acm export-certificate --certificate-arn $cert_arn --passphrase $cert_pass_phrase | jq -r '"\(.PrivateKey)"')
+if [[ $ssl_key!="$(cat /etc/ssl/private/${FQDN}.key)" ]]; then
+  echo "Copying ACM key to file /etc/ssl/private/${FQDN}.key"
+  echo "$ssl_key" > "/etc/ssl/private/${FQDN}.key"
+  restart_nginx="true"
+else
+  echo "Key value has not changed, not updating."
+fi
+
+####################
+# Trust Private CA #
+####################
+
+if [[ -v $PRIVATE_CA_NAME ]]; then
+  curl -s -o /usr/local/share/ca-certificates/${PRIVATE_CA_NAME}.crt ${PRIVATE_CA_URL} && \
+    chmod 644 /usr/local/share/ca-certificates/${PRIVATE_CA_NAME}.crt && \
+    update-ca-certificates
+fi
+
+
+###########
+### NGINX #
+###########
+
 # Restore original default config if no config has been provided
 if [[ ! "$(ls -A /etc/nginx/conf.d)" ]]; then
     cp -a /etc/nginx/.conf.d.orig/. /etc/nginx/conf.d 2>/dev/null
@@ -86,10 +101,10 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 # Run nginx
-service nginx start
+echo $cert_pass_phrase | service nginx start
 
 if [ $restart_nginx=="true" ]; then
-  echo "restarting nginx per certificate change"
+  echo "Restarting nginx per certificate change"
   service nginx stop
-  service nginx start
+  echo $cert_pass_phrase | service nginx start
 fi
