@@ -17,7 +17,7 @@ elif [[ -z "$FQDN" ]]; then
 fi
 
 secret_re='.*"SecretString": "(.*)",.*'
-cert_arn=$(eval "aws acm list-certificates --query 'CertificateSummaryList[?DomainName==\`${FQDN}\`]'.[CertificateArn] --output text")
+cert_arn=$(eval "aws acm list-certificates --query 'CertificateSummaryList[?DomainName==\`${FQDN}\`]'.[CertificateArn] --output text --max-items 1")
 
 if [[ $(aws secretsmanager get-secret-value --secret-id ${FQDN}) =~ $secret_re ]]; then
   cert_pass_phrase=${BASH_REMATCH[1]}
