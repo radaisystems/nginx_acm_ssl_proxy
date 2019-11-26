@@ -41,7 +41,7 @@ if [[ $ssl_cert!="$(cat /etc/ssl/certs/${FQDN}.crt)" ]]; then
   echo "$ssl_cert" > "/etc/ssl/certs/${FQDN}.crt"
   restart_nginx="true"
 else
-	echo "Certificate value has not changed, not updating."
+  echo "Certificate value has not changed, not updating."
 fi
 
 # SSL Key
