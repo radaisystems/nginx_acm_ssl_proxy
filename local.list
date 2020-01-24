@@ -1,0 +1,7 @@
+FQDN=sentry-proxy.io-dev.radai
+SERVER_NAME=sentry-proxy.io-dev
+HTTP_PROXY_URL=https://green.sentry.orbiters-dev.radai/api/4/store
+SENTRY_AUTH_STRING=sentry_version=7,sentry_client=$http_user_agent,sentry_key=<substring>
+AWS_SECRET_ACCESS_KEY=<>
+AWS_ACCESS_KEY_ID=<key to pull cert>
+AWS_DEFAULT_REGION=us-west-2

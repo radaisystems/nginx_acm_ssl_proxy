@@ -81,6 +81,19 @@ if [[ ! "$(ls -A /etc/nginx/conf.d)" ]]; then
     cp -a /etc/nginx/.conf.d.orig/. /etc/nginx/conf.d 2>/dev/null
 fi
 
+shopt -s extglob
+
+# Assign the appopriate config
+# if [[ -v $NGINX_CONFIG ]]; then
+#   echo /etc/nginx/conf.d/!("default.conf")
+#   rm -v /etc/nginx/conf.d/!("default.conf")
+#   echo "removed all nginx server configs except for default.conf" 2>/dev/null
+# else
+#   echo /etc/nginx/conf.d/!("${NGINX_CONFIG}.conf")
+#   rm -v /etc/nginx/conf.d/!("${NGINX_CONFIG}.conf")
+#   echo "removed all nginx server configs except for ${NGINX_CONFIG}.conf" 2>/dev/null
+# fi
+
 # Replace variables $ENV{<environment varname>}
 function ReplaceEnvironmentVariable() {
     grep -rl "\$ENV{\"$1\"}" $3|xargs -r \
@@ -101,6 +114,7 @@ fi
 for _curVar in `env | awk -F = '{print $1}'`;do
     # awk has split them by the equals sign
     # Pass the name and value to our function
+    ls -al /etc/nginx/conf.d/
     ReplaceEnvironmentVariable ${_curVar} ${!_curVar} /etc/nginx/conf.d/*
 done
 
