@@ -18,6 +18,7 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 20.10.14
+      - aws-cli/setup
       - run:
           name: Build nginx image
           command: |
