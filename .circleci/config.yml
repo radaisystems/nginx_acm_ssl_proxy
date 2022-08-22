@@ -1,4 +1,6 @@
 version: 2.1
+orbs: 
+  aws-cli: circleci/aws-cli@3.1.1
 executors:
   base:
     docker:
@@ -16,6 +18,7 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 20.10.14
+      - aws-cli/setup
       - run:
           name: Build nginx image
           command: |
@@ -32,3 +35,5 @@ workflows:
       - deploy-nginx:
           docker_repo: radaisystems/nginx-dynamic-acm
           ecr_repo: 659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm
+          context:
+            - AWS_PROD_ACCOUNT_CIRCLECI_USER_IAM
