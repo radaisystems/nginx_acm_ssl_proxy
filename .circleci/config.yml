@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Push to Dockerhub and AWS ECR on master or prod
           command: |
-            bash ./publish.sh ${CIRCLE_BRANCH} "<< parameters.docker_repo >>" "<< parameters.ecr_repo >>"
+            bash ./publish.sh "<< pipeline.git.branch >>" "<< parameters.docker_repo >>" "<< parameters.ecr_repo >>"
 
 workflows:
   version: 2
