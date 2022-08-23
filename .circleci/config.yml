@@ -1,24 +1,37 @@
 version: 2.1
 executors:
-  buildpack:
+  base:
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: cimg/python:3.10
 
 jobs:
   deploy-nginx:
-    executor: buildpack
+    executor: base
+    parameters:
+      docker_repo:
+        type: string
+      ecr_repo:
+        type: string
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.14
+      - run: pip install awscli pip --upgrade
       - run:
-          name: Build nginx container
+          name: Build nginx image
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            make build_or_publish WORKSPACE="${CIRCLE_BRANCH}"
+            docker build -t nginx-dynamic-acm . --progress plain
+      - run:
+          name: Push to Dockerhub and AWS ECR on master or prod
+          command: |
+            bash ./publish.sh "<< pipeline.git.branch >>" "<< parameters.docker_repo >>" "<< parameters.ecr_repo >>"
 
 workflows:
   version: 2
-
   build:
     jobs:
-      - deploy-nginx
+      - deploy-nginx:
+          docker_repo: radaisystems/nginx-dynamic-acm
+          ecr_repo: 659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm
+          context:
+            - AWS_PROD_ACCOUNT_CIRCLECI_USER_IAM
