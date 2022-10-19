@@ -23,4 +23,8 @@ if [ "$workspace" == "master" ] || [ "$workspace" == "prod" ]; then
     aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 659386482123.dkr.ecr.us-west-2.amazonaws.com
     docker tag nginx-dynamic-acm "$ecr_repo:$tag"
     docker push "$ecr_repo:$tag"
+else
+    aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 659386482123.dkr.ecr.us-west-2.amazonaws.com
+    docker tag nginx-dynamic-acm "$ecr_repo:$tag"
+    docker push "$ecr_repo:$tag"
 fi
