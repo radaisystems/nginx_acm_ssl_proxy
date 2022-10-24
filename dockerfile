@@ -21,6 +21,7 @@ RUN apt-get update && \
 # Copy our launch and configuration files
 COPY ./scripts /opt/scripts
 COPY conf/default.conf /default.conf
+COPY htpasswd /etc/nginx/htpasswd
 
 # Remove built in default.conf- it gets replaced by launch_proxy.sh
 RUN rm -f /etc/nginx/conf.d/default.conf

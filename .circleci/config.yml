@@ -20,7 +20,9 @@ jobs:
       - run:
           name: Build nginx image
           command: |
+            echo "flower:${FLOWER_PASS}" > htpasswd
             docker build -t nginx-dynamic-acm . --progress plain
+            rm -f htpasswd
       - run:
           name: Push to Dockerhub and AWS ECR on master or prod
           command: |
