@@ -35,3 +35,4 @@ workflows:
           ecr_repo: 659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm
           context:
             - AWS_PROD_ACCOUNT_CIRCLECI_USER_IAM
+            - DOCKERHUB_RADAISYSTEMSMACHINEUSER
