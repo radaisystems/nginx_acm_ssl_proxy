@@ -15,12 +15,12 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.14
+          version: 20.10.18
       - run: pip install awscli pip --upgrade
       - run:
           name: Build nginx image
           command: |
-            docker build -t nginx-dynamic-acm . --progress plain
+            docker build --build-arg NGINX_VERSION=${NGINX_VERSION:-latest} -t nginx-dynamic-acm . --progress plain
       - run:
           name: Push to Dockerhub and AWS ECR on master or prod
           command: |
