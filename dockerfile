@@ -5,9 +5,10 @@ ENV NX_PROXY_BUFFER_NUMBER=16
 ENV NX_PROXY_BUFFER_SIZE=4k
 ENV PROXY_HEADER_HOST=\$host
 
-# All this just for the awscli
-RUN apt-get update && \
-    apt-get install -y \
+# Update packages and then install awscli
+RUN apt-get update \
+    && apt-get full-upgrade -y \
+    && apt-get install -y \
         python3 \
         python3-pip \
         python3-setuptools \
