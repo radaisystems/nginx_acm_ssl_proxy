@@ -2,7 +2,7 @@
 set -e
 
 #
-# Validation
+# Validation for required variables
 #
 
 if [[ -z "$FQDN" ]]; then
@@ -22,16 +22,50 @@ if [[ -z "$NX_PROXY_BUFFER_SIZE" ]]; then
   exit 1
 fi
 
+
+#
+# Optional variables
+#
+
 # SERVER_NAME should be optional but needs to be a string, even if empty.
-if [[ -z "$SERVER_NAME" ]]; then
-  SERVER_NAME=""
-  export SERVER_NAME
+: "${SERVER_NAME:=}"
+export SERVER_NAME
+
+# ENABLE_RATE_LIMITING enables (uncomments) the rate limiting section of the config file.
+if [[ "$(echo $ENABLE_RATE_LIMITING | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
+  RATE_LIMIT_LINE_PREFIX=""
+else
+  RATE_LIMIT_LINE_PREFIX="# "
 fi
+export RATE_LIMIT_LINE_PREFIX
+
+# REAL_IP_ALLOWED_CIDR will default to our standard AWS VPC CIDR.
+: "${REAL_IP_ALLOWED_CIDR:=0.0.0.0/0}"
+export REAL_IP_ALLOWED_CIDR
+
+# RATE_LIMIT_STATE_SIZE dictates how many IP state statuses are stored in memory (in MB). 1 = ~ 16,000 IPs.
+: "${RATE_LIMIT_STATE_SIZE:=1}"
+export RATE_LIMIT_STATE_SIZE
+
+# RATE_LIMIT_REQUESTS dictates how many requests per second are allowed.
+: "${RATE_LIMIT_REQUESTS:=256}"
+export RATE_LIMIT_REQUESTS
+
+# RATE_LIMIT_BURST_SIZE number of requests allowed to be sent to the burst queue.
+if [[ -z "$RATE_LIMIT_BURST_SIZE" || "$RATE_LIMIT_BURST_SIZE" == "0" ]]; then
+  RATE_LIMIT_BURST=""
+else
+  # RATE_LIMIT_BURST_NODELAY send requests from burst queue immediately with no delay.
+  if [[ "$(echo $RATE_LIMIT_BURST_NODELAY | tr '[:upper:]' '[:lower:]')" == "false" ]]; then
+    RATE_LIMIT_BURST=" burst=$RATE_LIMIT_BURST_SIZE"
+  else
+    RATE_LIMIT_BURST=" burst=$RATE_LIMIT_BURST_SIZE nodelay"
+  fi
+fi
+export RATE_LIMIT_BURST
 
 if [ -n "$DEBUG" ]; then
-    echo "Environment variables:"
-    env
-    echo ""
+  echo -e "\nEnvironment variables:\n$(env)\n"
 fi
 
 
@@ -51,7 +85,6 @@ fi
 #
 # NGINX
 #
-
 
 # Replace variables $ENV{<environment varname>}
 function ReplaceEnvironmentVariable() {
