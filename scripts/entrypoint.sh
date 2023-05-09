@@ -21,7 +21,10 @@ if [[ -z "$NX_PROXY_BUFFER_SIZE" ]]; then
   echo "NX_PROXY_BUFFER_SIZE environmental variable is required (nginx proxy_buffers setting)"
   exit 1
 fi
-
+if [[ -z ${SUBPATH} ]]; then
+  echo "SUBPATH environmental variable being set to blank"
+  export SUBPATH=""
+fi
 
 #
 # Optional variables
