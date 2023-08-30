@@ -35,7 +35,7 @@ fi
 export SERVER_NAME
 
 # ENABLE_RATE_LIMITING enables (uncomments) the rate limiting section of the config file.
-if [[ "$(echo "$ENABLE_RATE_LIMITING" | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
+if [[ "$(echo $ENABLE_RATE_LIMITING | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
   RATE_LIMIT_LINE_PREFIX=""
 else
   RATE_LIMIT_LINE_PREFIX="# "
@@ -59,7 +59,7 @@ if [[ -z "$RATE_LIMIT_BURST_SIZE" || "$RATE_LIMIT_BURST_SIZE" == "0" ]]; then
   RATE_LIMIT_BURST=""
 else
   # RATE_LIMIT_BURST_NODELAY send requests from burst queue immediately with no delay.
-  if [[ "$(echo "$RATE_LIMIT_BURST_NODELAY" | tr '[:upper:]' '[:lower:]')" == "false" ]]; then
+  if [[ "$(echo $RATE_LIMIT_BURST_NODELAY | tr '[:upper:]' '[:lower:]')" == "false" ]]; then
     RATE_LIMIT_BURST=" burst=$RATE_LIMIT_BURST_SIZE"
   else
     RATE_LIMIT_BURST=" burst=$RATE_LIMIT_BURST_SIZE nodelay"
@@ -91,7 +91,7 @@ fi
 
 # Replace variables $ENV{<environment varname>}
 function ReplaceEnvironmentVariable() {
-    grep -rl "\$ENV{\"$1\"}" "$3"|xargs -r \
+    grep -rl "\$ENV{\"$1\"}" $3|xargs -r \
         sed -i "s|\\\$ENV{\"$1\"}|$2|g"
 }
 
