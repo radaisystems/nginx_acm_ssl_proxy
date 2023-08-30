@@ -42,6 +42,14 @@ else
 fi
 export RATE_LIMIT_LINE_PREFIX
 
+# ENABLE_API_LIMITING enables (uncomments) the rate limiting section of the config file.
+if [[ "$(echo $ENABLE_API_LIMITING | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
+  API_LIMIT_LINE_PREFIX=""
+else
+  API_LIMIT_LINE_PREFIX="# "
+fi
+export API_LIMIT_LINE_PREFIX
+
 # REAL_IP_ALLOWED_CIDR will default to our standard AWS VPC CIDR.
 : "${REAL_IP_ALLOWED_CIDR:=0.0.0.0/0}"
 export REAL_IP_ALLOWED_CIDR
@@ -107,7 +115,7 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 function certificate_expiration_check() {
-  expires=$(openssl s_client -servername $FQDN -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -dates | grep notAfter)
+  expires=$(openssl s_client -servername "$FQDN" -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -dates | grep notAfter)
   expires_date=${expires:9}
   echo "Certificate expires on ${expires_date}"
 }
