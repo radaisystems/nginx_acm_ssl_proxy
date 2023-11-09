@@ -75,7 +75,7 @@ else
 fi
 export RATE_LIMIT_BURST
 
-# If CLIENT_BODY_BUFFER_SIZE is set, it overwrites the default. Otherwise the default is used: 
+# If CLIENT_BODY_BUFFER_SIZE is set AND not "false", it overwrites the default. Otherwise the default is used: 
 # (https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size)
 if [[ -z "${CLIENT_BODY_BUFFER_SIZE}" || "$(echo $CLIENT_BODY_BUFFER_SIZE | tr '[:upper:]' '[:lower:]')" == "false" ]]; then
   CLIENT_BODY_BUFFER_SIZE_LINE=""
