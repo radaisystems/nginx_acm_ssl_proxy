@@ -21,7 +21,10 @@ if [[ -z "$NX_PROXY_BUFFER_SIZE" ]]; then
   echo "NX_PROXY_BUFFER_SIZE environmental variable is required (nginx proxy_buffers setting)"
   exit 1
 fi
-
+if [[ -z ${SUBPATH} ]]; then
+  echo "SUBPATH environmental variable being set to blank"
+  export SUBPATH=""
+fi
 
 #
 # Optional variables
@@ -38,6 +41,14 @@ else
   RATE_LIMIT_LINE_PREFIX="# "
 fi
 export RATE_LIMIT_LINE_PREFIX
+
+# ENABLE_API_LIMITING enables (uncomments) the rate limiting section of the config file.
+if [[ "$(echo $ENABLE_API_LIMITING | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
+  API_LIMIT_LINE_PREFIX=""
+else
+  API_LIMIT_LINE_PREFIX="# "
+fi
+export API_LIMIT_LINE_PREFIX
 
 # REAL_IP_ALLOWED_CIDR will default to our standard AWS VPC CIDR.
 : "${REAL_IP_ALLOWED_CIDR:=0.0.0.0/0}"
@@ -63,6 +74,16 @@ else
   fi
 fi
 export RATE_LIMIT_BURST
+
+# If CLIENT_BODY_BUFFER_SIZE is set AND not empty (""), it overwrites the default. Otherwise the default is used: 
+# (https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size)
+if [[ -n "${CLIENT_BODY_BUFFER_SIZE}" ]]; then
+  CLIENT_BODY_BUFFER_SIZE_LINE="client_body_buffer_size $CLIENT_BODY_BUFFER_SIZE;"
+else
+  CLIENT_BODY_BUFFER_SIZE_LINE=""
+fi
+export CLIENT_BODY_BUFFER_SIZE_LINE
+
 
 if [ -n "$DEBUG" ]; then
   echo -e "\nEnvironment variables:\n$(env)\n"
@@ -104,7 +125,7 @@ for _curVar in `env | awk -F = '{print $1}'`;do
 done
 
 function certificate_expiration_check() {
-  expires=$(openssl s_client -servername $FQDN -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -dates | grep notAfter)
+  expires=$(openssl s_client -servername "$FQDN" -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -dates | grep notAfter)
   expires_date=${expires:9}
   echo "Certificate expires on ${expires_date}"
 }

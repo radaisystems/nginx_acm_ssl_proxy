@@ -11,7 +11,8 @@ services:
       - "FQDN=ctcandidate.io-dev.radai"
       - "HTTP_PROXY_URL=http://webserver/"
       - "DEBUG=true"
-      #- "SELF_SIGNED=true"
+      # - "SUBPATH=thispath"
+      # - "SELF_SIGNED=true"
 
   webserver:
     image: nginx
