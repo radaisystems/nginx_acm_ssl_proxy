@@ -5,23 +5,9 @@ executors:
       - image: cimg/python:3.10
 
 jobs:
-  test:
-    executor: base
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Create Nginx proxy and webserver.
-          command: |
-            docker compose up --build -d       
-      - run:
-          name: Quickly check to make sure Nginx is up and redirecting.
-          command: |
-            set -x
-            docker run --network container:nginx_proxy \
-              appropriate/curl -4 --retry 10 --retry-delay 3 --retry-connrefused --insecure https://localhost/
   deploy-nginx:
-    executor: base
+    machine:
+        image: ubuntu-2004:2023.04.2
     parameters:
       docker_repo:
         type: string
@@ -29,8 +15,6 @@ jobs:
         type: string
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.18
       - run: pip install awscli pip --upgrade
       - run:
           name: Build nginx image
@@ -39,7 +23,7 @@ jobs:
       - run:
           name: Create Nginx proxy and webserver.
           command: |
-            docker compose up -f docker-compose-ci.yaml -d
+            docker compose -f docker-compose-ci.yaml up -d
       - run:
           name: Quickly check to make sure Nginx is up and redirecting.
           command: |
@@ -55,7 +39,6 @@ workflows:
   version: 2
   build:
     jobs:
-      # - test
       - deploy-nginx:
           docker_repo: radaisystems/nginx-dynamic-acm
           ecr_repo: 659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm
