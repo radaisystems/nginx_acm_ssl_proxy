@@ -6,7 +6,8 @@ executors:
 
 jobs:
   deploy-nginx:
-    executor: base
+    machine:
+        image: ubuntu-2004:2023.04.2
     parameters:
       docker_repo:
         type: string
@@ -14,13 +15,21 @@ jobs:
         type: string
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.18
       - run: pip install awscli pip --upgrade
       - run:
           name: Build nginx image
           command: |
             docker build --build-arg "NGINX_VERSION=${NGINX_VERSION:-latest}" --build-arg "COMMIT=${CIRCLE_SHA1}" -t nginx-dynamic-acm -t "nginx-dynamic-acm:ci${CIRCLE_BUILD_NUM}" . --progress plain
+      - run:
+          name: Create Nginx proxy and webserver.
+          command: |
+            docker compose -f docker-compose-ci.yaml up -d
+      - run:
+          name: Quickly check to make sure Nginx is up and redirecting.
+          command: |
+            set -x
+            docker run --network container:nginx_proxy \
+              appropriate/curl -4 --retry 10 --retry-delay 3 --retry-connrefused --insecure https://localhost/
       - run:
           name: Push to Dockerhub and AWS ECR on master or prod
           command: |
