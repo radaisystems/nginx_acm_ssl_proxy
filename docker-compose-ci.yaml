@@ -2,7 +2,7 @@ version: "2"
 
 services:
   nginx_proxy:
-    build: .
+    image: nginx-dynamic-acm
     container_name: nginx_proxy
     volumes:
       - ~/.aws:/root/.aws
