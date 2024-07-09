@@ -1,47 +1,46 @@
-version: 2.1
-executors:
-  base:
-    docker:
-      - image: cimg/python:3.10
+name: Deploy Nginx
+
+on:
+  push:
+    branches:
+      - master
+      - prod
 
 jobs:
   deploy-nginx:
-    machine:
-        image: ubuntu-2004:2023.04.2
-    parameters:
-      docker_repo:
-        type: string
-      ecr_repo:
-        type: string
-    steps:
-      - checkout
-      - run: pip install awscli pip --upgrade
-      - run:
-          name: Build nginx image
-          command: |
-            docker build --build-arg "NGINX_VERSION=${NGINX_VERSION:-latest}" --build-arg "COMMIT=${CIRCLE_SHA1}" -t nginx-dynamic-acm -t "nginx-dynamic-acm:ci${CIRCLE_BUILD_NUM}" . --progress plain
-      - run:
-          name: Create Nginx proxy and webserver.
-          command: |
-            docker compose -f docker-compose-ci.yaml up -d
-      - run:
-          name: Quickly check to make sure Nginx is up and redirecting.
-          command: |
-            set -x
-            docker run --network container:nginx_proxy \
-              appropriate/curl -4 --retry 10 --retry-delay 3 --retry-connrefused --insecure https://localhost/
-      - run:
-          name: Push to Dockerhub and AWS ECR on master or prod
-          command: |
-            bash ./publish.sh "<< pipeline.git.branch >>" "<< parameters.docker_repo >>" "<< parameters.ecr_repo >>"
+    runs-on: self-hosted
 
-workflows:
-  version: 2
-  build:
-    jobs:
-      - deploy-nginx:
-          docker_repo: radaisystems/nginx-dynamic-acm
-          ecr_repo: 659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm
-          context:
-            - AWS_PROD_ACCOUNT_CIRCLECI_USER_IAM
-            - DOCKERHUB_RADAISYSTEMSMACHINEUSER
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install AWS CLI
+        run: pip install awscli pip --upgrade
+
+      - name: Build nginx image
+        run: |
+          docker build --build-arg "NGINX_VERSION=${{ env.NGINX_VERSION }}" --build-arg "COMMIT=${{ github.sha }}" -t nginx-dynamic-acm -t "nginx-dynamic-acm:ci${{ github.run_number }}" . --progress plain
+
+      - name: Create Nginx proxy and webserver
+        run: |
+          docker compose -f docker-compose-ci.yaml up -d
+
+      - name: Quickly check to make sure Nginx is up and redirecting
+        run: |
+          set -x
+          docker run --network container:nginx_proxy \
+            appropriate/curl -4 --retry 10 --retry-delay 3 --retry-connrefused --insecure https://localhost/
+
+      - name: Push to Dockerhub and AWS ECR on master or prod
+        run: |
+          bash ./publish.sh "${{ github.ref_name }}" "radaisystems/nginx-dynamic-acm" "659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm"
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
