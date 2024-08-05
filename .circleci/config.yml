@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy-nginx:
-    runs-on: self-hosted
+    runs-on: nginx-acm-ssl-proxy
 
     steps:
       - name: Checkout repository
