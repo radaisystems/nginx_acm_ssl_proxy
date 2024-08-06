@@ -3,8 +3,7 @@
 set -euo pipefail
 
 workspace=$1
-dockerhub_repo=$2
-ecr_repo=$3
+ecr_repo=$2
 
 if [ "$workspace" == "master" ]; then
     tag="latest"

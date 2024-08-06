@@ -39,7 +39,7 @@ jobs:
 
       - name: Push to Artifactory and AWS ECR on master/prod branch
         run: |
-          bash -x ./publish.sh "${{ github.ref_name }}" "radaisystems/nginx-dynamic-acm" "659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm"
+          bash -x ./publish.sh "${{ github.ref_name }}" "659386482123.dkr.ecr.us-west-2.amazonaws.com/radai_nginx_dynamic_acm"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
