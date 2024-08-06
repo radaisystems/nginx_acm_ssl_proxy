@@ -16,7 +16,7 @@ fi
 
 
 if [ "$workspace" == "master" ] || [ "$workspace" == "prod" ] || [ "$workspace" == "vishad/PLE-1877" ]; then
-    echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
     docker login artifacts.radai.com -u "$ARTIFACTORY_USERNAME" -p "$ARTIFACTORY_PASSWORD"
     docker tag nginx-dynamic-acm "$dockerhub_repo:$tag"
     docker tag nginx-dynamic-acm artifacts.radai.com/local-platform-container-release/nginx/radai_nginx_dynamic_acm:"$tag"
