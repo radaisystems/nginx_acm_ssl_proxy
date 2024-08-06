@@ -11,7 +11,7 @@ if [ "$workspace" == "master" ]; then
 elif [ "$workspace" == "prod" ]; then
     tag="v1"
 else
-    tag="$workspace"
+    tag="test-migration"
 fi
 
 
