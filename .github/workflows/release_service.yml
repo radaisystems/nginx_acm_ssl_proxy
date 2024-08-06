@@ -25,7 +25,7 @@ jobs:
 
       - name: Build nginx image
         run: |
-          docker build --build-arg "NGINX_VERSION=${{ env.NGINX_VERSION }}" --build-arg "COMMIT=${{ github.sha }}" -t nginx-dynamic-acm -t "nginx-dynamic-acm:ci${{ github.run_number }}" . --progress plain
+          docker build --build-arg "NGINX_VERSION=${NGINX_VERSION:-latest}" --build-arg "COMMIT=${{ github.sha }}" -t nginx-dynamic-acm -t "nginx-dynamic-acm:ci${{ github.run_number }}" . --progress plain
 
       - name: Create Nginx proxy and webserver
         run: |
