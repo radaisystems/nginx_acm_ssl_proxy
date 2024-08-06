@@ -10,11 +10,11 @@ if [ "$workspace" == "master" ]; then
 elif [ "$workspace" == "prod" ]; then
     tag="v1"
 else
-    tag="test-migration"
+    tag="$workspace"
 fi
 
 
-if [ "$workspace" == "master" ] || [ "$workspace" == "prod" ] || [ "$workspace" == "vishad/PLE-1877" ]; then
+if [ "$workspace" == "master" ] || [ "$workspace" == "prod" ]; then
     docker login artifacts.radai.com -u "$ARTIFACTORY_USERNAME" -p "$ARTIFACTORY_PASSWORD"
     docker tag nginx-dynamic-acm artifacts.radai.com/local-platform-container-release/nginx/radai_nginx_dynamic_acm:"$tag"
     docker push artifacts.radai.com/local-platform-container-release/nginx/radai_nginx_dynamic_acm:"$tag"
