@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - prod
-      - vishad/PLE-1877
 
 jobs:
   deploy-nginx:
